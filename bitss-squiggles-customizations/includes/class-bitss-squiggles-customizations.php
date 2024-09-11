@@ -258,8 +258,8 @@ class Bitss_Squiggles_Customizations {
 		$this->loader->add_action( 'woocommerce_account_reading-history_endpoint', $plugin_public, 'woocommerce_account_reading_history_endpoint');
 		$this->loader->add_action( 'yith_wcwl_after_wishlist_form', $plugin_public, 'yith_wcwl_after_wishlist_form',99,1);
 		$this->loader->add_action( 'woocommerce_cart_loaded_from_session', $plugin_public, 'woocommerce_cart_loaded_from_session',99);
-		if ( is_admin() ) {
 
+		if ( is_admin() ) {
 			$this->loader->add_action( 'wp_ajax_otp_resend', $plugin_public, 'otp_resend' );
 			$this->loader->add_action( 'wp_ajax_nopriv_otp_resend', $plugin_public, 'otp_resend' );
 
