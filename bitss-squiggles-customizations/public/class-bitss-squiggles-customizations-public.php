@@ -757,7 +757,7 @@ class Bitss_Squiggles_Customizations_Public {
 		//echo json_encode($this->books_shelf );exit;
 		$book_shelf_credits = $this->books_shelf["credits"];
 		foreach($items as $item => $values) {
-			//print_r($values);exit;
+			// print_r("vishnu".$values["issue_or_return"]);exit;
 			if ( !has_term( 'book', 'product_cat', $values["product_id"]) ) {
 				$line_subtotal      = $values['line_subtotal']; 
 				// $line_subtotal_tax  = $cart_item['line_subtotal_tax'];
@@ -956,7 +956,9 @@ class Bitss_Squiggles_Customizations_Public {
 		if ( has_term( 'book', 'product_cat',$product_id ) ) {
 
 			//$this->books_shelf = $this->book_shelf_obj->Get_User_Book_Shelf();
-			$books = array_column($this->books_shelf["books"], 'product_id'); ;
+			
+			$books = array_column($this->books_shelf["books"], 'product_id');
+			// echo "<pre>"; print_r($product_id); print_r($books); die;
 			if (in_array($product_id , $books)){
 
 				$return_copy_post_ids = array_filter($this->books_shelf["books"], function ($obj) use ($product_id) {
@@ -969,7 +971,6 @@ class Bitss_Squiggles_Customizations_Public {
 				$cart_item_data['credits'] =  reset($return_copy_post_ids)["credits"];
 			}else{
 				$cart_item_data['issue_or_return'] = 'issue';
-				
 				$product = wc_get_product(  $product_id );
 				$cart_item_data['credits'] = $product->get_price();
 			}
@@ -1777,5 +1778,6 @@ class Bitss_Squiggles_Customizations_Public {
 	// 	die();
 
 	// }
+
 
 }

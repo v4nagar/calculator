@@ -1480,4 +1480,301 @@ class Bitss_Squiggles_Customizations_Admin {
 		wp_send_json($resp);
 		die();
 	}
+
+	
+	// function add_deposit_damage_history_tab( $s ) {
+	// 	$active_subscription_id = $s->get_id();
+	// 	$sub_damages = get_post_meta( $active_subscription_id, 'sub_damages', true );
+	// 	$subscription_amt = get_post_meta( $active_subscription_id, 'wpcf-subscription-deposit-amount', true );
+	// 	$parent_id = $s->get_parent_id();
+	// 	$parent_order = wc_get_order($parent_id);
+	// 	$this->books_shelf = $this->book_shelf_obj->Get_User_Book_Shelf();
+	// 	$return_book = $this->books_shelf["books"];
+	// 	$has_refunded = false;
+	// 	$refunded_amt = 0;
+		
+	// 	if ($parent_order) {
+	// 		$refunds = $parent_order->get_refunds();
+	// 		if (!empty($refunds)) {
+	// 			$has_refunded = true;
+	// 			foreach ($refunds as $refund) {
+	// 				$refunded_amt += floatval($refund->get_amount());
+	// 			}
+	// 		}
+	// 	}
+		
+	// 	if (!empty($sub_damages)) {
+	// 		echo '<h2>Deposit And Damage History</h2>';
+	
+	// 		$html = '<div class="sq_sd_table deposit_and_dmg_table table-container">
+	// 			<table class="table is-bordered" id="sub_damage_table">
+	// 				<thead>
+	// 					<tr>
+	// 						<th>S.No.</th>
+	// 						<th>Date</th>
+	// 						<th>Type</th>
+	// 						<th>Amount</th>
+	// 						<th>Remark</th>
+	// 						<th>Added Order Id</th>
+	// 						<th>Paid Order Id</th>
+	// 					</tr>
+	// 				</thead>
+	// 				<tbody>';
+	// 		$i = 0;
+	// 		$damage_amt = 0;
+	// 		foreach ($sub_damages as $value) {
+	// 			$i++;
+	// 			$paid_order_id = isset($value['paid_order_id']) ? $value['paid_order_id'] : 'N/A';
+	// 			if (!isset($value['paid_order_id'])) {
+	// 				$damage_amt += floatval($value['amt']);
+	// 			}
+	// 			$html .= '
+	// 				<tr>
+	// 					<td>' . esc_html($i) . '</td>
+	// 					<td>' . esc_html(date_i18n(get_option('date_format'), strtotime($value['date']))) . '</td>
+	// 					<td>' . esc_html($value['type']) . '</td>
+	// 					<td>' . wp_kses_post(wc_price($value['amt'])) . '</td>
+	// 					<td>' . esc_html($value['remark']) . '</td>
+	// 					<td>' . esc_html($value['added_order_id']) . '</td>
+	// 					<td>' . $paid_order_id . '</td>
+	// 				</tr>';
+	// 		}
+	
+	// 		$remaining_amt = floatval($subscription_amt) - $damage_amt;
+	// 		$formatted_subscription_amt = wc_price($subscription_amt);
+	// 		$formatted_damage_amt = wc_price($damage_amt);
+	// 		$formatted_remaining_amt = wc_price($remaining_amt);
+	
+	// 		$html .= '</tbody></table></div>';
+	
+	// 		echo $html;
+	
+	// 		echo '<div class="remaining_amt">
+	// 			<table>
+	// 				<tr>
+	// 					<td>Deposit Amount</td>
+	// 					<td>' . wp_kses_post($formatted_subscription_amt) . '</td>
+	// 				</tr>
+	// 				<tr>
+	// 					<td>Damage And Other Charges</td>
+	// 					<td>' . wp_kses_post($formatted_damage_amt) . '</td>
+	// 				</tr>
+	// 				<tr>
+	// 					<td>Remaining Amount</td>
+	// 					<td>' . wp_kses_post($formatted_remaining_amt) . '</td>
+	// 				</tr>';
+	// 		if ($remaining_amt > 0 && $has_refunded==false && !$s->has_status(array('active')) && sizeof($return_book)>0) {
+	// 			echo '
+	// 				<tr>
+	// 					<td></td>
+	// 					<td><a href="#" class="button" id="request-refund" data-subscription="' . esc_attr($active_subscription_id) . '" data-amount="' . esc_attr($remaining_amt) . '">Request Refund</a></td>
+	// 				</tr>';
+	// 		}
+	// 		if (!empty($refunds) && $has_refunded==true) {
+	// 			$refund_remark = $refund->get_meta( '_refund_remark' );
+	// 			$refund_date = $refund->get_meta( '_refund_day_date' );
+	// 			// $reference_note = $refund->get_meta('reference_note', true);
+	// 			// $refund_date = $refund->get_date_created();
+	// 			$formatted_refund_date = $refund_date ? date_i18n(get_option('date_format'), $refund_date->getTimestamp()) : 'N/A';
+	
+	// 			foreach ($refunds as $refund) {
+	// 				echo '<tr>
+	// 						<td>Refunded Amount</td>
+	// 						<td>'.wc_price(wp_kses_post(-floatval($refund->get_amount()))).'
+	// 						<div>'.esc_html($formatted_refund_date).'</div>
+	// 						</td>
+							
+	// 					</td>';
+	// 			}
+	// 		}
+	// 		echo '</table></div>';
+	// 	}
+
+
+	function add_deposit_damage_history_tab( $s ) {
+		$active_subscription_id = $s->get_id();
+		$sub_damages = get_post_meta( $active_subscription_id, 'sub_damages', true );
+		$subscription_amt = get_post_meta( $active_subscription_id, 'wpcf-subscription-deposit-amount', true );
+		$parent_id = $s->get_parent_id();
+		$parent_order = wc_get_order($parent_id);
+		$this->books_shelf = $this->book_shelf_obj->Get_User_Book_Shelf();
+		$return_book = $this->books_shelf["books"];
+		// var_dump($return_book); die;
+		$has_refunded = false;
+		$refunded_amt = 0;
+		
+		if ($parent_order) {
+			$refunds = $parent_order->get_refunds();
+			if (!empty($refunds)) {
+				$has_refunded = true;
+				foreach ($refunds as $refund) {
+					$refunded_amt += floatval($refund->get_amount());
+				}
+			}
+		}
+		
+		if (!empty($sub_damages)) {
+			echo '<h2>Deposit And Damage History</h2>';
+	
+			$html = '<div class="sq_sd_table deposit_and_dmg_table table-container">
+				<table class="table is-bordered" id="sub_damage_table">
+					<thead>
+						<tr>
+							<th>S.No.</th>
+							<th>Date</th>
+							<th>Type</th>
+							<th>Amount</th>
+							<th>Remark</th>
+							<th>Added Order Id</th>
+							<th>Paid Order Id</th>
+						</tr>
+					</thead>
+					<tbody>';
+			$i = 0;
+			$damage_amt = 0;
+			foreach ($sub_damages as $value) {
+				$i++;
+				$paid_order_id = isset($value['paid_order_id']) ? $value['paid_order_id'] : 'N/A';
+				if (!isset($value['paid_order_id'])) {
+					$damage_amt += floatval($value['amt']);
+				}
+				$html .= '
+					<tr>
+						<td>' . esc_html($i) . '</td>
+						<td>' . esc_html(date_i18n(get_option('date_format'), strtotime($value['date']))) . '</td>
+						<td>' . esc_html($value['type']) . '</td>
+						<td>' . wp_kses_post(wc_price($value['amt'])) . '</td>
+						<td>' . esc_html($value['remark']) . '</td>
+						<td>' . esc_html($value['added_order_id']) . '</td>
+						<td>' . $paid_order_id . '</td>
+					</tr>';
+			}
+	
+			$remaining_amt = floatval($subscription_amt) - $damage_amt;
+			$formatted_subscription_amt = wc_price($subscription_amt);
+			$formatted_damage_amt = wc_price($damage_amt);
+			$formatted_remaining_amt = wc_price($remaining_amt);
+	
+			$html .= '</tbody></table></div>';
+	
+			echo $html;
+	
+			echo '<div class="remaining_amt">
+				<table>
+					<tr>
+						<td>Deposit Amount</td>
+						<td>' . wp_kses_post($formatted_subscription_amt) . '</td>
+					</tr>
+					<tr>
+						<td>Damage And Other Charges</td>
+						<td>' . wp_kses_post($formatted_damage_amt) . '</td>
+					</tr>';
+				echo '<tr>
+					<td>Remaining Amount</td>
+					<td>' . wp_kses_post($formatted_remaining_amt) . '</td>
+				</tr>';
+			if ($remaining_amt > 0 && $has_refunded == false && !$s->has_status(array('active')) && sizeof($return_book) > 0) {
+				echo '
+					<tr>
+						<td></td>
+						<td><a href="#" class="button" id="request-refund" data-subscription="' . esc_attr($active_subscription_id) . '" data-amount="' . esc_attr($remaining_amt) . '">Request Refund</a></td>
+					</tr>';
+			}
+			if (!empty($refunds) && $has_refunded == true) {
+				foreach ($refunds as $refund) {
+					$refund_status = $refund->get_refunded_payment();
+					// $refund_status = false;
+					// var_dump($refund_status);
+					if($refund_status==1){
+						$refund_remark = $refund->get_meta('_refund_remark');
+						$refund_date = $refund->get_meta('_refund_day_date');
+						$formatted_refund_date = $refund_date ? date_i18n(get_option('date_format'), $refund_date->getTimestamp()) : 'N/A';
+						echo '<tr>
+								<td>Refunded Amount
+								<div>' . esc_html($formatted_refund_date) . '</div>
+								<div>' . esc_html($refund_remark) . '</div>
+								</td>
+								<td>' . wc_price(wp_kses_post(-floatval($refund->get_amount()))) . '
+								</td>
+							</tr>';
+					}else{
+						// die('fsdf');
+						echo '<tr>
+								<td>Redund Status</td>
+								<td>Pending</td>
+							</tr>';
+					}
+				}
+			}
+			echo '</table></div>';
+		}
+	
+		// Adding JavaScript for AJAX
+		?>
+		<script type="text/javascript">
+			jQuery(document).ready(function($) {
+				$('#request-refund').on('click', function(e) {
+					e.preventDefault();
+					var $this = $(this);
+					var subscriptionId = $(this).data('subscription');
+					var refundAmount = $(this).data('amount');
+					$this.attr('disabled', 'disabled').text('Processing...');
+					$.ajax({
+						url: '<?php echo admin_url('admin-ajax.php'); ?>',
+						type: 'POST',
+						data: {
+							action: 'process_refund',
+							subscription_id: subscriptionId,
+							refund_amount: refundAmount,
+						},
+						success: function(response) {
+							$this.prop('disabled', false).text('Request Refund');
+							if (response.success) {
+								alert('Refund Successful! You will receive a confirmation SMS.');
+								location.reload(); // Reload the same page after refund
+							} else {
+								alert('Refund failed: ' + response.data);
+							}
+						}
+					});
+				});
+			});
+		</script>
+		<?php
+	}
+	function process_refund() {
+		// Validate and sanitize input
+		if (isset($_POST['subscription_id']) && isset($_POST['refund_amount'])) {
+			$subscription_id = absint($_POST['subscription_id']);
+			$refund_amount = floatval($_POST['refund_amount']);
+		 //echo $refund_amount; die;
+			$order = wc_get_order($subscription_id);
+			if ($order) {
+				// Create a refund
+				$parent_id = $order->get_parent_id();
+	// 			$has_refunded = get_post_meta($parent_id, '_has_refunded', true);
+				$refund_id = wc_create_refund(array(
+					'amount'     =>  $refund_amount,
+					'reason'     => 'Refund requested by user',
+					'order_id'   => $parent_id,
+					'line_items' => array(),
+					'refund_payment' => false
+				));
+	
+				if (!is_wp_error($refund_id)) {
+					// Optionally send success SMS here
+					//send_success_sms_to_user($user_phone, 'Your refund request has been processed successfully.');
+	
+					wp_send_json_success();
+				} else {
+					wp_send_json_error($refund_id->get_error_message());
+				}
+			} else {
+				wp_send_json_error('Order not found.');
+			}
+		} else {
+			wp_send_json_error('Invalid request.');
+		}
+	}
+	
 }	

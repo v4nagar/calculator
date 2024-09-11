@@ -178,8 +178,11 @@ class Bitss_Squiggles_Customizations {
 			$this->loader->add_action( 'edit_user_profile_update', $plugin_admin, 'wk_save_custom_user_profile_fields' );
 			$this->loader->add_action( 'woocommerce_admin_order_data_after_order_details', $plugin_admin, 'woocommerce_admin_order_data_after_order_details' );
 			$this->loader->add_action( 'admin_init', $plugin_admin, 'init_set_capabilities',999 );
+			$this->loader->add_action( 'woocommerce_subscription_totals_table',$plugin_admin,'add_deposit_damage_history_tab' );
+
 			if(is_admin()){
-				
+				$this->loader->add_action(' wp_ajax_process_refund',$plugin_admin, 'process_refund');
+				$this->loader->add_action(' wp_ajax_nopriv_process_refund',$plugin_admin, 'process_refund');
 				$this->loader->add_action( 'wp_ajax_save_subscription_damage', $plugin_admin, 'send_save_subscription_damage' );
 				$this->loader->add_action( 'wp_ajax_save_slots_data', $plugin_admin, 'save_slots_data' );
 				$this->loader->add_action( 'wp_ajax_save_issue_copy_id', $plugin_admin, 'save_issue_copy_id' );
@@ -255,8 +258,8 @@ class Bitss_Squiggles_Customizations {
 		$this->loader->add_action( 'woocommerce_account_reading-history_endpoint', $plugin_public, 'woocommerce_account_reading_history_endpoint');
 		$this->loader->add_action( 'yith_wcwl_after_wishlist_form', $plugin_public, 'yith_wcwl_after_wishlist_form',99,1);
 		$this->loader->add_action( 'woocommerce_cart_loaded_from_session', $plugin_public, 'woocommerce_cart_loaded_from_session',99);
-
 		if ( is_admin() ) {
+
 			$this->loader->add_action( 'wp_ajax_otp_resend', $plugin_public, 'otp_resend' );
 			$this->loader->add_action( 'wp_ajax_nopriv_otp_resend', $plugin_public, 'otp_resend' );
 
