@@ -1,0 +1,107 @@
+/**
+ * All of the CSS for your public-facing functionality should be
+ * included in this file.
+ */
+
+ .lds-facebook {
+    display: none;
+    position: relative;
+    width: 80px;
+    height: 40px;
+  }
+  .lds-facebook div {
+    display: inline-block;
+    position: absolute;
+    left: 8px;
+    width: 16px;
+    background: #000;
+    animation: lds-facebook 1.2s cubic-bezier(0, 0.5, 0.5, 1) infinite;
+  }
+  .lds-facebook div:nth-child(1) {
+    left: 8px;
+    animation-delay: -0.24s;
+  }
+  .lds-facebook div:nth-child(2) {
+    left: 32px;
+    animation-delay: -0.12s;
+  }
+  .lds-facebook div:nth-child(3) {
+    left: 56px;
+    animation-delay: 0;
+  }
+  @keyframes lds-facebook {
+    0% {
+      top: -4px;
+      height: 34px;
+    }
+    50%, 100% {
+      top: 4px;
+      height: 16px;
+    }
+  }
+
+  .bt_add_to_cart a{
+    margin: 0;
+  }
+  .bt_add_to_cart.added a::after{
+    font-family: WooCommerce;
+    content: '\e017';
+    margin-left: 0.53em;
+    vertical-align: bottom;
+  }
+  .bt_add_to_cart.disabled a, .bt_add_to_cart a.added, a.added{
+    cursor: not-allowed;
+    opacity: .5;
+    padding: 0.618em 1em;
+    pointer-events: none;
+  }
+  
+  th.product-quantity, td.product-quantity{
+    display: none !important;
+  }
+
+  form.woocommerce-cart-form th.product-price,  form.woocommerce-cart-form td.product-price{
+    display: none !important;
+  }
+  .ast-mobile-order-review-wrap{
+    display:none !important;
+  }
+form[name=checkout] .woocommerce-shipping-fields,  
+  form[name=checkout] .woocommerce-shipping-totals.shipping{
+    display:none !important;
+  }
+
+.credits_totals .not_available{
+  color:red;
+}
+.credits_totals .available{
+  color:green;
+}
+button[name=update_cart]{
+	display:none !important;
+}
+.shine {
+  background: #222 -webkit-gradient(linear, left top, right top, from(#222), to(#222), color-stop(0.5, #fff)) 0 0 no-repeat;
+  -webkit-background-size: 150px;
+  color: rgba(255, 255, 255, 0.3);
+  -webkit-background-clip: text;
+  -webkit-animation-name: shine;
+  -webkit-animation-duration: 5s;
+  -webkit-animation-iteration-count: infinite;
+  text-shadow: 0 0px 0px rgba(255, 255, 255, 0.5);
+}
+
+@-webkit-keyframes shine {
+  0%, 10% {
+    background-position: -1000px;
+  }
+  20% {
+    background-position: top left;
+  }
+  90% {
+    background-position: top right;
+  }
+  100% {
+    background-position: 1000px;
+  }
+}
