@@ -1600,13 +1600,13 @@ class Bitss_Squiggles_Customizations_Admin {
 		$this->books_shelf = $this->book_shelf_obj->Get_User_Book_Shelf();
 		$return_book = $this->books_shelf["books"];
 		// var_dump($return_book); die;
-		$has_refunded = false;
+	
 		$refunded_amt = 0;
 		
 		if ($parent_order) {
 			$refunds = $parent_order->get_refunds();
+			//echo "<pre>"; print_r($refunds); die;
 			if (!empty($refunds)) {
-				$has_refunded = true;
 				foreach ($refunds as $refund) {
 					$refunded_amt += floatval($refund->get_amount());
 				}
@@ -1673,52 +1673,64 @@ class Bitss_Squiggles_Customizations_Admin {
 					<td>Remaining Amount</td>
 					<td>' . wp_kses_post($formatted_remaining_amt) . '</td>
 				</tr>';
-			if ($remaining_amt > 0 && $has_refunded == false && !$s->has_status(array('active')) && sizeof($return_book) > 0) {
+			if ($remaining_amt > 0 && $refunded_amt < $remaining_amt && !$s->has_status(array('active')) && sizeof($return_book) < 1) {
 				echo '
 					<tr>
 						<td></td>
 						<td><a href="#" class="button" id="request-refund" data-subscription="' . esc_attr($active_subscription_id) . '" data-amount="' . esc_attr($remaining_amt) . '">Request Refund</a></td>
 					</tr>';
 			}
-			if (!empty($refunds) && $has_refunded == true) {
+			if (!empty($refunds) ) {
+				
 				foreach ($refunds as $refund) {
+					//echo "<pre>"; print_r($refund);
 					$refund_status = $refund->get_refunded_payment();
-					// $refund_status = false;
-					// var_dump($refund_status);
-					if($refund_status==1){
-						$refund_remark = $refund->get_meta('_refund_remark');
-						$refund_date = $refund->get_meta('_refund_day_date');
-						$formatted_refund_date = $refund_date ? date_i18n(get_option('date_format'), $refund_date->getTimestamp()) : 'N/A';
+					$refund_date = $refund->get_meta( '_refund_day_date' );
+					$refund_remark =$refund->get_meta( '_refund_remark' );
+					$redunf_created_date = $refund->get_date_created();
+					// echo $refund_status; 
+					            //$meta_data = $refund->get_meta_data();
+
+					
+					if($refund_status){
+						$formatted_refund_date = date_i18n(get_option('date_format'), strtotime($refund_date));
 						echo '<tr>
-								<td>Refunded Amount
-								<div>' . esc_html($formatted_refund_date) . '</div>
-								<div>' . esc_html($refund_remark) . '</div>
+								<td><strong>Refunded on </strong>
+								<div><strong>' . esc_html($formatted_refund_date) . '</strong></div>
+								<div><strong>' . esc_html($refund_remark) . '</strong></div>
 								</td>
-								<td>' . wc_price(wp_kses_post(-floatval($refund->get_amount()))) . '
-								</td>
+								<td><strong>' . wc_price( $refund->get_total() ) . '
+								</strong></td>
 							</tr>';
 					}else{
 						// die('fsdf');
 						echo '<tr>
-								<td>Redund Status</td>
-								<td>Pending</td>
+								<td><strong>Refund on '.date_i18n(get_option('date_format'), strtotime($redunf_created_date)).' is Pending </strong></td>
+								<td></td>
 							</tr>';
 					}
 				}
+				// die;
 			}
 			echo '</table></div>';
 		}
 	
 		// Adding JavaScript for AJAX
-		?>
-		<script type="text/javascript">
+?>
+	<script type="text/javascript">
 			jQuery(document).ready(function($) {
 				$('#request-refund').on('click', function(e) {
 					e.preventDefault();
 					var $this = $(this);
 					var subscriptionId = $(this).data('subscription');
 					var refundAmount = $(this).data('amount');
-					$this.attr('disabled', 'disabled').text('Processing...');
+					        // Check if button is already disabled
+							if ($this.hasClass('disabled')) {
+            return; // Exit if the button is disabled
+        }
+
+        // Add 'disabled' class to visually indicate the button is disabled
+        $this.addClass('disabled').text('Processing...');
 					$.ajax({
 						url: '<?php echo admin_url('admin-ajax.php'); ?>',
 						type: 'POST',
@@ -1728,21 +1740,26 @@ class Bitss_Squiggles_Customizations_Admin {
 							refund_amount: refundAmount,
 						},
 						success: function(response) {
-							$this.prop('disabled', false).text('Request Refund');
+							// $this.prop('disabled', false).text('Request Refund');
 							if (response.success) {
-								alert('Refund Successful! You will receive a confirmation SMS.');
+								alert('Refund Successful!.');
 								location.reload(); // Reload the same page after refund
+								$this.removeClass('disabled').text('Request Refund'); // Re-enable button
+
 							} else {
 								alert('Refund failed: ' + response.data);
+								$this.removeClass('disabled').text('Request Refund'); // Re-enable button
 							}
 						}
 					});
 				});
 			});
 		</script>
+
 		<?php
 	}
 	function process_refund() {
+		//die("fdgfd");
 		// Validate and sanitize input
 		if (isset($_POST['subscription_id']) && isset($_POST['refund_amount'])) {
 			$subscription_id = absint($_POST['subscription_id']);
@@ -1762,6 +1779,7 @@ class Bitss_Squiggles_Customizations_Admin {
 				));
 	
 				if (!is_wp_error($refund_id)) {
+// 					die("dfgdf");
 					// Optionally send success SMS here
 					//send_success_sms_to_user($user_phone, 'Your refund request has been processed successfully.');
 	

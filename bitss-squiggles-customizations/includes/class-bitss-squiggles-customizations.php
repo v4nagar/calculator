@@ -181,8 +181,8 @@ class Bitss_Squiggles_Customizations {
 			$this->loader->add_action( 'woocommerce_subscription_totals_table',$plugin_admin,'add_deposit_damage_history_tab' );
 
 			if(is_admin()){
-				$this->loader->add_action(' wp_ajax_process_refund',$plugin_admin, 'process_refund');
-				$this->loader->add_action(' wp_ajax_nopriv_process_refund',$plugin_admin, 'process_refund');
+				$this->loader->add_action('wp_ajax_process_refund', $plugin_admin, 'process_refund');
+				$this->loader->add_action('wp_ajax_nopriv_process_refund', $plugin_admin, 'process_refund');
 				$this->loader->add_action( 'wp_ajax_save_subscription_damage', $plugin_admin, 'send_save_subscription_damage' );
 				$this->loader->add_action( 'wp_ajax_save_slots_data', $plugin_admin, 'save_slots_data' );
 				$this->loader->add_action( 'wp_ajax_save_issue_copy_id', $plugin_admin, 'save_issue_copy_id' );
