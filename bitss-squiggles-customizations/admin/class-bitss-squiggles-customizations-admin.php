@@ -1673,6 +1673,7 @@ class Bitss_Squiggles_Customizations_Admin {
 					<td>Remaining Amount</td>
 					<td>' . wp_kses_post($formatted_remaining_amt) . '</td>
 				</tr>';
+				
 			if ($remaining_amt > 0 && $refunded_amt < $remaining_amt && !$s->has_status(array('active')) && sizeof($return_book) < 1) {
 				echo '
 					<tr>
@@ -1706,7 +1707,7 @@ class Bitss_Squiggles_Customizations_Admin {
 						// die('fsdf');
 						echo '<tr>
 								<td><strong>Refund on '.date_i18n(get_option('date_format'), strtotime($redunf_created_date)).' is Pending </strong></td>
-								<td></td>
+								<td><a href="#" class="button cancel-refund" data-refund-id="' . esc_attr($refund->get_id()) . '">Cancel Refund</a></td>
 							</tr>';
 					}
 				}
@@ -1726,11 +1727,14 @@ class Bitss_Squiggles_Customizations_Admin {
 					var refundAmount = $(this).data('amount');
 					        // Check if button is already disabled
 							if ($this.hasClass('disabled')) {
-            return; // Exit if the button is disabled
-        }
+								return; // Exit if the button is disabled
+							}
+							if (!confirm('Are you sure you want to request a refund of ' + refundAmount + '?')) {
+								return; // Exit if user does not confirm
+							}
 
-        // Add 'disabled' class to visually indicate the button is disabled
-        $this.addClass('disabled').text('Processing...');
+					// Add 'disabled' class to visually indicate the button is disabled
+					$this.addClass('disabled').text('Processing...');
 					$.ajax({
 						url: '<?php echo admin_url('admin-ajax.php'); ?>',
 						type: 'POST',
@@ -1753,23 +1757,46 @@ class Bitss_Squiggles_Customizations_Admin {
 						}
 					});
 				});
+				jQuery(document).on('click', '.cancel-refund', function(e) {
+				e.preventDefault();
+
+				var refundId = jQuery(this).data('refund-id');
+
+				if (confirm('Are you sure you want to cancel this refund?')) {
+					jQuery.ajax({
+						url: '/wp-admin/admin-ajax.php',
+						type: 'POST',
+						data: {
+							action: 'cancel_refund',
+							refund_id: refundId,
+						},
+						success: function(response) {
+							if (response.success) {
+								alert('Refund cancelled successfully.');
+								location.reload();
+							} else {
+								alert('Failed to cancel refund. Please try again.');
+							}
+						},
+						error: function() {
+							alert('Error cancelling the refund.');
+						}
+					});
+				}
+			});
+
 			});
 		</script>
 
 		<?php
 	}
 	function process_refund() {
-		//die("fdgfd");
-		// Validate and sanitize input
 		if (isset($_POST['subscription_id']) && isset($_POST['refund_amount'])) {
 			$subscription_id = absint($_POST['subscription_id']);
 			$refund_amount = floatval($_POST['refund_amount']);
-		 //echo $refund_amount; die;
 			$order = wc_get_order($subscription_id);
 			if ($order) {
-				// Create a refund
 				$parent_id = $order->get_parent_id();
-	// 			$has_refunded = get_post_meta($parent_id, '_has_refunded', true);
 				$refund_id = wc_create_refund(array(
 					'amount'     =>  $refund_amount,
 					'reason'     => 'Refund requested by user',
@@ -1779,10 +1806,6 @@ class Bitss_Squiggles_Customizations_Admin {
 				));
 	
 				if (!is_wp_error($refund_id)) {
-// 					die("dfgdf");
-					// Optionally send success SMS here
-					//send_success_sms_to_user($user_phone, 'Your refund request has been processed successfully.');
-	
 					wp_send_json_success();
 				} else {
 					wp_send_json_error($refund_id->get_error_message());
@@ -1794,5 +1817,95 @@ class Bitss_Squiggles_Customizations_Admin {
 			wp_send_json_error('Invalid request.');
 		}
 	}
+
+	
+
+function handle_cancel_refund() {
+    if (!isset($_POST['refund_id'])) {
+        wp_send_json_error('Invalid request');
+    }
+
+    $refund_id = intval($_POST['refund_id']);
+    
+    // Get the refund object
+    $refund = wc_get_order($refund_id);
+
+    // Ensure it's a refund order and is in the 'pending' state
+//     if (!$refund || 'refund' !== $refund->get_type() || 'pending' !== $refund->get_status()) {
+//         wp_send_json_error('Refund cannot be canceled');
+//     }
+
+    // Permanently delete the refund order
+    wp_delete_post($refund_id, true); // 'true' ensures permanent deletion, not just moving to trash
+
+    wp_send_json_success('Refund deleted successfully');
+}
+	
+		function edit_my_account_order_refund_status($order_id){
+		$order = wc_get_order( $order_id );
+			$refunds = $order->get_refunds();
+
+// 			foreach ( $refunds as $refund ) {
+// 				// Get the current refund reason
+// 				$reason = $refund->get_reason();
+
+// 				// Check if the payment has been refunded
+// 				if ( ! $refund->get_refunded_payment() ) {
+// 					$pending_text = 'Refund Pending';
+// 					$pending_text = '(' . $pending_text . ')';
+// 				} else {
+// 					$refund_remark = $refund->get_meta( '_refund_remark' );
+// 					$refund_date = $refund->get_meta( '_refund_day_date' );
+					
+// 				}
+
+// 				// Append the pending text to the reason
+// 				$reason = $reason . ' ' . $pending_text;
+
+// 				// Set the updated reason
+// 				$refund->set_reason( $reason );
+
+// 				// Save the updated refund object
+// 				$refund->save();
+// 			}
+foreach ( $refunds as $refund ) {
+    // Get the current refund reason
+    $reason = $refund->get_reason();
+    
+    // Check if the reason already contains the pending text
+    if ( strpos( $reason, 'Refund Pending' ) === false && ! $refund->get_refunded_payment() ) {
+        // If not refunded, append 'Refund Pending'
+        $pending_text = 'Refund Pending';
+        $pending_text = '(' . $pending_text . ')';
+    } elseif ( strpos( $reason, 'Refunded on' ) === false && $refund->get_refunded_payment() ) {
+        // If refunded, append 'Refunded on' and the formatted date
+        $refund_remark = $refund->get_meta( '_refund_remark' );
+        $refund_date = $refund->get_meta( '_refund_day_date' );
+        $formatted_date = date_i18n( get_option('date_format') . ' ' . get_option('time_format'), strtotime($refund_date) );
+        $pending_text = 'Refunded on ' . $formatted_date;
+        
+        // Append refund remark if needed
+        if ( $refund_remark ) {
+            $pending_text .= ' (' . $refund_remark . ')';
+        }
+    } else {
+        // Skip if pending text is already in the reason
+        continue;
+    }
+
+    // Append the pending text to the reason
+    $reason = $reason . ' ' . $pending_text;
+
+    // Set the updated reason
+    $refund->set_reason( $reason );
+
+    // Save the updated refund object
+    $refund->save();
+}
+
+
+
+	}
+
 	
 }	
