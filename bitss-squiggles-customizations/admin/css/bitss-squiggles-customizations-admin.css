@@ -7,3 +7,35 @@
     width: 100%;
     margin: auto;
  }
+
+ .sq_fields_and_labels{
+     display: flex;
+     margin: 5px;
+     /* width: 50%; */
+ }
+ .sq_fields_and_labels label{
+     text-align: left
+ }
+ .sq_fields_and_labels select{
+     padding: 5px;
+     width: 150px;
+ }
+ .sq_fields_and_labels input{
+     /* padding: 5px; */
+     width: 150px;
+ }
+ .sq_fields_and_labels .field-label{
+     width: 30%;
+ }
+ .sq_fields_and_labels .field-label{
+     width: 30%;
+ }
+ .sq_squiggles_damage_inputs{
+     display: flex;
+ }
+@media (max-width: 768px) {
+   .sq_squiggles_damage_inputs{
+      display: unset;
+   }
+}
+

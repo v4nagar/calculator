@@ -30,7 +30,15 @@
 	 */
   	
 	$(document).ready(function () {
-	 
+	 	jQuery(document).on('change', '.sq_amount_auto_cal', function() {
+            var product_price = jQuery('#sq_mt_copy option:selected').attr('data-product-price');
+			var reason = jQuery('#sq_mt_type').val();
+			var severity = jQuery('#sq_mt_severity').val();
+			if (product_price && reason && severity) {
+				var damage_amount = calculate_damage_amount_auto(product_price, reason, severity);
+				jQuery('#sq_mt_amt').val(damage_amount.toFixed(2));
+			}
+		});
 	  $("#sq_mt_save_to_table").click(function (e) {
 		e.preventDefault();
 		if(!confirm("Are you sure?")) return false;
@@ -118,32 +126,52 @@
 	function sq_mt_save_to_table() {
 	  var date = $("#sq_mt_date").val();
 	  var type = $("#sq_mt_type").val();
+	  var severity = $("#sq_mt_severity").val();
+	  var copys = $("#sq_mt_copy").val();
 	  var amt = $("#sq_mt_amt").val();
 	  var remark = $("#sq_mt_remark").val();
 	  var added_id = $("#sq_mt_added_id").val();
-	  // var paid_id = $("#sq_mt_paid_id").val("paid");
 	  var order_id = $("#post_ID").val();
-  
-	  if (
+	  var sq_copy_id = $("#sq_copy_id").val();
+	  var sq_product_id = $("#sq_product_id").val();
+	  var sq_damage_books_ids = [];
+		$('.sq-damage-book-img').each(function() {
+			console.log($(this).val());
+			var inputValue = $(this).val();
+			sq_damage_books_ids.push(inputValue);
+		});
+		
+		
+		if (
 		date == "" ||
 		type == "" ||
+		severity == "" ||
+		copys == "" ||
 		amt == "" ||
 		remark == "" ||
-		added_id == ""
+		added_id == ""||
+		sq_copy_id == ""||
+		sq_product_id == ""||
+		sq_damage_books_ids.length <0
 	  ) {
 		alert("All fields are required!");
 		$("#sq_spinner").removeClass("is-active");
 		return;
 	  }
-  
+//  		var sq_damage_books_ids_string = JSON.stringify(sq_damage_books_ids);
 	  var obj = {
 		date: date,
 		type: type,
+		severity: severity,
+		copys: copys,
 		amt: amt,
 		remark: remark,
 		added_order_id: order_id,
+		sq_copy_id: sq_copy_id,
+		sq_product_id: sq_product_id,
+		sq_books_ids:sq_damage_books_ids,
 	  };
-  
+
 	  save_sub_damage(obj, "save_subscription_damage");
 	}
 	
@@ -184,7 +212,12 @@
 	}
   
 	function save_sub_damage(obj, action_name) {
-	  jQuery.post( "/wp-admin/admin-ajax.php", { action: action_name, data: obj }, function (data) {
+// 		console.log(obj);
+	  jQuery.post( "/wp-admin/admin-ajax.php", { 
+		  action: action_name, 
+		  data: obj }, 
+		function (data) {
+// 		  alert();
 		  $("#sq_spinner").removeClass("is-active");
 		  alert(data.message);
 	   
@@ -199,6 +232,10 @@
 				  value.date +
 				  "</td><td>" +
 				  value.type +
+				  "</td><td>" +
+				  value.severity +
+				  "</td><td>" +
+				  value.copys +
 				  "</td><td>" +
 				  value.amt +
 				  "</td><td>" +
@@ -239,10 +276,17 @@
   
 	function load_sub_damage_table() {
 	  var arr = get_sub_dam_data();
+		
   
 	  $("#sub_damage_table tbody").html("");
   
 	  $.each(arr, function (key, value) {
+		   var imagesHtml = "";
+        if (value.sq_books_ids && value.sq_books_ids.length > 0) {
+            $.each(value.sq_books_ids, function(index, imageUrl) {
+                imagesHtml += "<a href ='"+ imageUrl +"' target='_blank'><img src='" + imageUrl + "' alt='Damage Image' style='width:20px'></a>";
+            });
+        }
 		var tbody =
 		  "<tr><td class='td'>" +
 		  (key + 1) +
@@ -250,6 +294,10 @@
 		  value.date +
 		  "</td><td>" +
 		  value.type +
+		  "<div class='sq-damage-table-img'>" + imagesHtml + "</div></td><td>" +
+		  value.severity +
+		  "</td><td>" +
+		  value.copys +
 		  "</td><td>" +
 		  value.amt +
 		  "</td><td>" +
@@ -352,7 +400,7 @@
 		$("#slots_table tbody").append(row);
 	  }
 	}
-  
+
 	function save_data(e) {
 	  e.preventDefault();
   
@@ -380,4 +428,43 @@
 		}
 	  }
 	}
+	function calculate_damage_amount_auto(product_price, reason, severity) {
+            if (product_price && reason && severity) {
+                let ten_percent_amount = (10 / 100) * product_price;
+                let thirty_percent_amount = (30 / 100) * product_price;
+                let full_amt = parseFloat(product_price) + parseFloat(ten_percent_amount);
+                let damage_amount = 0;
+        
+                if (reason === 'Ripped Pages') {
+                    if (severity > 0 && severity < 4) {
+                        damage_amount = Math.max(20, Math.min(ten_percent_amount, 50));
+                    } else {
+                        damage_amount = Math.max(50, Math.min(thirty_percent_amount, 300));
+                    }
+                }
+        
+                else if (reason === 'Liquid Damage') {
+                    if (severity > 0 && severity < 4) {
+                        damage_amount = Math.max(20, Math.min(ten_percent_amount, 50));
+                    } else {
+                        damage_amount = Math.max(50, Math.min(thirty_percent_amount, 300));
+                    }
+                }
+        
+                else if (reason === 'Book Lost') {
+                    if (severity > 0 && severity < 4) {
+                        damage_amount = Math.max(20, Math.min(ten_percent_amount, 50));
+                    } else {
+                        damage_amount = full_amt;
+                    }
+                }
+        
+                else if (reason === 'Other Damages') {
+                    
+                }
+        
+                return damage_amount;
+            }
+            return 0;
+        }
   })(jQuery);

@@ -324,7 +324,10 @@ class Bitss_Squiggles_Customizations_Admin {
 	}
 	public function custom_metabox_content( $post)
 	{
-		//get currect order's subscrption id
+// 			$copy_post_id = WC_Order_Item_Product($post->ID
+ 			$order = new WC_Order($post->ID );
+			$items = $order->get_items();
+
 		$active_subscription_id = get_post_meta($post->ID, 'active_subscription_id',true);
 		
 		if($active_subscription_id){
@@ -351,12 +354,19 @@ class Bitss_Squiggles_Customizations_Admin {
 		if (isset($_POST['data'])) {
 
 			$sub_damage = $_POST['data'];
+			
+
 			$added_order_id = $sub_damage["added_order_id"];
 			$active_subscription_id = get_post_meta($added_order_id, 'active_subscription_id',true);
 			// $added_order_id = "172";
 			//loop through all fields of sub_damage and sanitize every field.
 			foreach ($sub_damage as $key => $val) {
-				$sub_damage[$key] = sanitize_text_field($val);
+				if (is_array($val)) {
+ 				   $sub_damage[$key] = $val;
+				} else {
+					$sub_damage[$key] = sanitize_text_field($val);
+				}
+
 			}
 
 			$sub_damages = get_post_meta( $active_subscription_id, 'sub_damages', true);
@@ -364,7 +374,7 @@ class Bitss_Squiggles_Customizations_Admin {
 				$sub_damages =[];
 			}
 			$sub_damages[] = $sub_damage;
-
+// 			echo "<pre>"; print_r($sub_damages); die;
 			update_post_meta( $active_subscription_id, 'sub_damages', $sub_damages);
 			
 
@@ -1481,116 +1491,6 @@ class Bitss_Squiggles_Customizations_Admin {
 		die();
 	}
 
-	
-	// function add_deposit_damage_history_tab( $s ) {
-	// 	$active_subscription_id = $s->get_id();
-	// 	$sub_damages = get_post_meta( $active_subscription_id, 'sub_damages', true );
-	// 	$subscription_amt = get_post_meta( $active_subscription_id, 'wpcf-subscription-deposit-amount', true );
-	// 	$parent_id = $s->get_parent_id();
-	// 	$parent_order = wc_get_order($parent_id);
-	// 	$this->books_shelf = $this->book_shelf_obj->Get_User_Book_Shelf();
-	// 	$return_book = $this->books_shelf["books"];
-	// 	$has_refunded = false;
-	// 	$refunded_amt = 0;
-		
-	// 	if ($parent_order) {
-	// 		$refunds = $parent_order->get_refunds();
-	// 		if (!empty($refunds)) {
-	// 			$has_refunded = true;
-	// 			foreach ($refunds as $refund) {
-	// 				$refunded_amt += floatval($refund->get_amount());
-	// 			}
-	// 		}
-	// 	}
-		
-	// 	if (!empty($sub_damages)) {
-	// 		echo '<h2>Deposit And Damage History</h2>';
-	
-	// 		$html = '<div class="sq_sd_table deposit_and_dmg_table table-container">
-	// 			<table class="table is-bordered" id="sub_damage_table">
-	// 				<thead>
-	// 					<tr>
-	// 						<th>S.No.</th>
-	// 						<th>Date</th>
-	// 						<th>Type</th>
-	// 						<th>Amount</th>
-	// 						<th>Remark</th>
-	// 						<th>Added Order Id</th>
-	// 						<th>Paid Order Id</th>
-	// 					</tr>
-	// 				</thead>
-	// 				<tbody>';
-	// 		$i = 0;
-	// 		$damage_amt = 0;
-	// 		foreach ($sub_damages as $value) {
-	// 			$i++;
-	// 			$paid_order_id = isset($value['paid_order_id']) ? $value['paid_order_id'] : 'N/A';
-	// 			if (!isset($value['paid_order_id'])) {
-	// 				$damage_amt += floatval($value['amt']);
-	// 			}
-	// 			$html .= '
-	// 				<tr>
-	// 					<td>' . esc_html($i) . '</td>
-	// 					<td>' . esc_html(date_i18n(get_option('date_format'), strtotime($value['date']))) . '</td>
-	// 					<td>' . esc_html($value['type']) . '</td>
-	// 					<td>' . wp_kses_post(wc_price($value['amt'])) . '</td>
-	// 					<td>' . esc_html($value['remark']) . '</td>
-	// 					<td>' . esc_html($value['added_order_id']) . '</td>
-	// 					<td>' . $paid_order_id . '</td>
-	// 				</tr>';
-	// 		}
-	
-	// 		$remaining_amt = floatval($subscription_amt) - $damage_amt;
-	// 		$formatted_subscription_amt = wc_price($subscription_amt);
-	// 		$formatted_damage_amt = wc_price($damage_amt);
-	// 		$formatted_remaining_amt = wc_price($remaining_amt);
-	
-	// 		$html .= '</tbody></table></div>';
-	
-	// 		echo $html;
-	
-	// 		echo '<div class="remaining_amt">
-	// 			<table>
-	// 				<tr>
-	// 					<td>Deposit Amount</td>
-	// 					<td>' . wp_kses_post($formatted_subscription_amt) . '</td>
-	// 				</tr>
-	// 				<tr>
-	// 					<td>Damage And Other Charges</td>
-	// 					<td>' . wp_kses_post($formatted_damage_amt) . '</td>
-	// 				</tr>
-	// 				<tr>
-	// 					<td>Remaining Amount</td>
-	// 					<td>' . wp_kses_post($formatted_remaining_amt) . '</td>
-	// 				</tr>';
-	// 		if ($remaining_amt > 0 && $has_refunded==false && !$s->has_status(array('active')) && sizeof($return_book)>0) {
-	// 			echo '
-	// 				<tr>
-	// 					<td></td>
-	// 					<td><a href="#" class="button" id="request-refund" data-subscription="' . esc_attr($active_subscription_id) . '" data-amount="' . esc_attr($remaining_amt) . '">Request Refund</a></td>
-	// 				</tr>';
-	// 		}
-	// 		if (!empty($refunds) && $has_refunded==true) {
-	// 			$refund_remark = $refund->get_meta( '_refund_remark' );
-	// 			$refund_date = $refund->get_meta( '_refund_day_date' );
-	// 			// $reference_note = $refund->get_meta('reference_note', true);
-	// 			// $refund_date = $refund->get_date_created();
-	// 			$formatted_refund_date = $refund_date ? date_i18n(get_option('date_format'), $refund_date->getTimestamp()) : 'N/A';
-	
-	// 			foreach ($refunds as $refund) {
-	// 				echo '<tr>
-	// 						<td>Refunded Amount</td>
-	// 						<td>'.wc_price(wp_kses_post(-floatval($refund->get_amount()))).'
-	// 						<div>'.esc_html($formatted_refund_date).'</div>
-	// 						</td>
-							
-	// 					</td>';
-	// 			}
-	// 		}
-	// 		echo '</table></div>';
-	// 	}
-
-
 	function add_deposit_damage_history_tab( $s ) {
 		$active_subscription_id = $s->get_id();
 		$sub_damages = get_post_meta( $active_subscription_id, 'sub_damages', true );
@@ -1599,39 +1499,39 @@ class Bitss_Squiggles_Customizations_Admin {
 		$parent_order = wc_get_order($parent_id);
 		$this->books_shelf = $this->book_shelf_obj->Get_User_Book_Shelf();
 		$return_book = $this->books_shelf["books"];
-		// var_dump($return_book); die;
 	
 		$refunded_amt = 0;
-		
+	
 		if ($parent_order) {
 			$refunds = $parent_order->get_refunds();
-			//echo "<pre>"; print_r($refunds); die;
 			if (!empty($refunds)) {
 				foreach ($refunds as $refund) {
 					$refunded_amt += floatval($refund->get_amount());
 				}
 			}
 		}
-		
-		if (!empty($sub_damages)) {
-			echo '<h2>Deposit And Damage History</h2>';
 	
-			$html = '<div class="sq_sd_table deposit_and_dmg_table table-container">
-				<table class="table is-bordered" id="sub_damage_table">
-					<thead>
-						<tr>
-							<th>S.No.</th>
-							<th>Date</th>
-							<th>Type</th>
-							<th>Amount</th>
-							<th>Remark</th>
-							<th>Added Order Id</th>
-							<th>Paid Order Id</th>
-						</tr>
-					</thead>
-					<tbody>';
-			$i = 0;
-			$damage_amt = 0;
+		echo '<h2>Deposit And Damage History</h2>';
+	
+		$html = '<div class="sq_sd_table deposit_and_dmg_table table-container">
+			<table class="table is-bordered" id="sub_damage_table">
+				<thead>
+					<tr>
+						<th>S.No.</th>
+						<th>Date</th>
+						<th>Type</th>
+						<th>Amount</th>
+						<th>Remark</th>
+						<th>Added Order Id</th>
+						<th>Paid Order Id</th>
+					</tr>
+				</thead>
+				<tbody>';
+	
+		$i = 0;
+		$damage_amt = 0;
+	
+		if (!empty($sub_damages)) {
 			foreach ($sub_damages as $value) {
 				$i++;
 				$paid_order_id = isset($value['paid_order_id']) ? $value['paid_order_id'] : 'N/A';
@@ -1649,72 +1549,75 @@ class Bitss_Squiggles_Customizations_Admin {
 						<td>' . $paid_order_id . '</td>
 					</tr>';
 			}
+		} else {
+			$html .= '<tr><td colspan="7">No damages exist</td></tr>';
+		}
 	
-			$remaining_amt = floatval($subscription_amt) - $damage_amt;
-			$formatted_subscription_amt = wc_price($subscription_amt);
-			$formatted_damage_amt = wc_price($damage_amt);
-			$formatted_remaining_amt = wc_price($remaining_amt);
+		$remaining_amt = floatval($subscription_amt) - $damage_amt;
+		$formatted_subscription_amt = wc_price($subscription_amt);
+		if($damage_amt >0){
+					$formatted_damage_amt = wc_price($damage_amt);
+		}else{
+					$formatted_damage_amt = 'No damage charges';
+		}
+		$formatted_remaining_amt = wc_price($remaining_amt);
 	
-			$html .= '</tbody></table></div>';
+		$html .= '</tbody></table></div>';
 	
-			echo $html;
+		echo $html;
 	
-			echo '<div class="remaining_amt">
-				<table>
-					<tr>
-						<td>Deposit Amount</td>
-						<td>' . wp_kses_post($formatted_subscription_amt) . '</td>
-					</tr>
-					<tr>
-						<td>Damage And Other Charges</td>
-						<td>' . wp_kses_post($formatted_damage_amt) . '</td>
-					</tr>';
-				echo '<tr>
+		echo '<div class="remaining_amt">
+			<table>
+				<tr>
+					<td>Deposit Amount</td>
+					<td>' . wp_kses_post($formatted_subscription_amt) . '</td>
+				</tr>
+				<tr>
+					<td>Damage And Other Charges</td>
+					<td>' . wp_kses_post($formatted_damage_amt) . '</td>
+				</tr>
+				<tr>
 					<td>Remaining Amount</td>
 					<td>' . wp_kses_post($formatted_remaining_amt) . '</td>
 				</tr>';
-				
-			if ($remaining_amt > 0 && $refunded_amt < $remaining_amt && !$s->has_status(array('active')) && sizeof($return_book) < 1) {
-				echo '
-					<tr>
-						<td></td>
-						<td><a href="#" class="button" id="request-refund" data-subscription="' . esc_attr($active_subscription_id) . '" data-amount="' . esc_attr($remaining_amt) . '">Request Refund</a></td>
-					</tr>';
-			}
-			if (!empty($refunds) ) {
-				
-				foreach ($refunds as $refund) {
-					//echo "<pre>"; print_r($refund);
-					$refund_status = $refund->get_refunded_payment();
-					$refund_date = $refund->get_meta( '_refund_day_date' );
-					$refund_remark =$refund->get_meta( '_refund_remark' );
-					$redunf_created_date = $refund->get_date_created();
-					// echo $refund_status; 
-					            //$meta_data = $refund->get_meta_data();
-
-					
-					if($refund_status){
-						$formatted_refund_date = date_i18n(get_option('date_format'), strtotime($refund_date));
-						echo '<tr>
-								<td><strong>Refunded on </strong>
-								<div><strong>' . esc_html($formatted_refund_date) . '</strong></div>
-								<div><strong>' . esc_html($refund_remark) . '</strong></div>
-								</td>
-								<td><strong>' . wc_price( $refund->get_total() ) . '
-								</strong></td>
-							</tr>';
-					}else{
-						// die('fsdf');
-						echo '<tr>
-								<td><strong>Refund on '.date_i18n(get_option('date_format'), strtotime($redunf_created_date)).' is Pending </strong></td>
-								<td><a href="#" class="button cancel-refund" data-refund-id="' . esc_attr($refund->get_id()) . '">Cancel Refund</a></td>
-							</tr>';
-					}
-				}
-				// die;
-			}
-			echo '</table></div>';
+	
+		// Display the refund button if no damages and no refund has been requested yet
+		if ($remaining_amt > 0 && $refunded_amt < $remaining_amt && !$s->has_status(array('active')) && sizeof($return_book) < 1) {
+			echo '
+				<tr>
+					<td></td>
+					<td><a href="#" class="button" id="request-refund" data-subscription="' . esc_attr($active_subscription_id) . '" data-amount="' . esc_attr($remaining_amt) . '">Request Refund</a></td>
+				</tr>';
 		}
+	
+		if (!empty($refunds)) {
+			foreach ($refunds as $refund) {
+				$refund_status = $refund->get_refunded_payment();
+				$refund_date = $refund->get_meta( '_refund_day_date' );
+				$refund_remark = $refund->get_meta( '_refund_remark' );
+				$refund_created_date = $refund->get_date_created();
+	
+				if ($refund_status) {
+					$formatted_refund_date = date_i18n(get_option('date_format'), strtotime($refund_date));
+					echo '<tr>
+						<td><strong>Refunded on </strong>
+						<div><strong>' . esc_html($formatted_refund_date) . '</strong></div>
+						<div><strong>' . esc_html($refund_remark) . '</strong></div>
+						</td>
+						<td><strong>' . wc_price($refund->get_total()) . '</strong></td>
+					</tr>';
+				} else {
+					echo '<tr>
+						<td><strong>Refund on ' . date_i18n(get_option('date_format'), strtotime($refund_created_date)) . ' is Pending </strong></td>
+						<td><a href="#" class="button cancel-refund" data-refund-id="' . esc_attr($refund->get_id()) . '">Cancel Refund</a></td>
+					</tr>';
+				}
+			}
+		}
+	
+		echo '</table></div>';
+	
+	
 	
 		// Adding JavaScript for AJAX
 ?>
