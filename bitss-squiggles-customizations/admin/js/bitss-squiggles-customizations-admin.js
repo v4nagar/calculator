@@ -124,6 +124,7 @@
 	});
   
 	function sq_mt_save_to_table() {
+	  var email_notification = $('#sq_email_notification').is(':checked');
 	  var date = $("#sq_mt_date").val();
 	  var type = $("#sq_mt_type").val();
 	  var severity = $("#sq_mt_severity").val();
@@ -140,7 +141,6 @@
 			var inputValue = $(this).val();
 			sq_damage_books_ids.push(inputValue);
 		});
-		
 		
 		if (
 		date == "" ||
@@ -172,7 +172,7 @@
 		sq_books_ids:sq_damage_books_ids,
 	  };
 
-	  save_sub_damage(obj, "save_subscription_damage");
+	  save_sub_damage(obj, "save_subscription_damage",email_notification);
 	}
 	
 	function save_issue_copy_id(copy_post_id, item_id, order_id) {
@@ -211,11 +211,13 @@
 		});
 	}
   
-	function save_sub_damage(obj, action_name) {
+	function save_sub_damage(obj, action_name, emailcheck) {
 // 		console.log(obj);
 	  jQuery.post( "/wp-admin/admin-ajax.php", { 
 		  action: action_name, 
-		  data: obj }, 
+		  data: obj,
+		  email: emailcheck 
+		}, 
 		function (data) {
 // 		  alert();
 		  $("#sq_spinner").removeClass("is-active");
@@ -225,29 +227,32 @@
 			  $("#sub_damage_table tbody").html("");
 			  var arr = data.data;
 			  $.each( arr, function( key, value ) {
+				if (value.sq_books_ids && value.sq_books_ids.length > 0) {
+					var imagesHtml = ""; 
+					$.each(value.sq_books_ids, function(index, imageUrl) {
+						imagesHtml += "<a href ='"+ imageUrl +"' target='_blank'><img src='" + imageUrl + "' alt='Damage Image' style='width:20px'></a>";
+					});
+				}
 				  var tbody =
-				  "<tr><td class='td'>" +
-				  (key + 1) +
-				  ".</td><td>" +
-				  value.date +
-				  "</td><td>" +
-				  value.type +
-				  "</td><td>" +
-				  value.severity +
-				  "</td><td>" +
-				  value.copys +
-				  "</td><td>" +
-				  value.amt +
-				  "</td><td>" +
-				  value.remark +
-				  "</td><td>" +
-				  "<a href ='/wp-admin/post.php?post="+value.added_order_id + "&action=edit'>"+value.added_order_id + "</a>"+
-				  "</td><td>" +
-				  "<a href ='/wp-admin/post.php?post="+value.paid_order_id + "&action=edit'>"+value.paid_order_id + "</a>"+
-			
-				  "</td><td>"
-				  // <button type='button' class='delete-hour' data-index='" + key +	"'>Delete</button>
-				  "</td></tr>";
+					"<tr><td class='td'>" +
+					(key + 1) +
+					".</td><td>" +
+					value.date +
+					"</td><td>" +
+					value.type +
+					"<div class='sq-damage-table-img'>" + imagesHtml + "</div></td><td>" +
+					value.severity +
+					"</td><td>" +
+					"<a href='/wp-admin/post.php?post=" + value.sq_product_id + "&action=edit'>" + value.copys + "</a>" +
+					"</td><td>" +
+					value.amt +
+					"</td><td>" +
+					value.remark +
+					"</td><td>" +
+					"<a href='/wp-admin/post.php?post=" + value.added_order_id + "&action=edit'>" + value.added_order_id + "</a>" +
+					"</td><td>" +
+					"<a href='/wp-admin/post.php?post=" + value.paid_order_id + "&action=edit'>" + value.paid_order_id + "</a>" +
+					"</td></tr>";
   
 				  $("#sub_damage_table tbody").append(tbody);
 			  })
@@ -297,19 +302,17 @@
 		  "<div class='sq-damage-table-img'>" + imagesHtml + "</div></td><td>" +
 		  value.severity +
 		  "</td><td>" +
-		  value.copys +
+		  "<a href='/wp-admin/post.php?post=" + value.sq_product_id + "&action=edit'>" + value.copys + "</a>" +
 		  "</td><td>" +
 		  value.amt +
 		  "</td><td>" +
 		  value.remark +
 		  "</td><td>" +
-		  "<a href ='/wp-admin/post.php?post="+value.added_order_id + "&action=edit'>"+value.added_order_id + "</a>"+
+		  "<a href='/wp-admin/post.php?post=" + value.added_order_id + "&action=edit'>" + value.added_order_id + "</a>" +
 		  "</td><td>" +
-		  "<a href ='/wp-admin/post.php?post="+value.paid_order_id + "&action=edit'>"+value.paid_order_id + "</a>"+
-			
-		  "</td><td>";
-		// <button type='button' class='delete-hour' data-index='" + key +	"'>Delete</button>
-		("</td></tr>");
+		  "<a href='/wp-admin/post.php?post=" + value.paid_order_id + "&action=edit'>" + value.paid_order_id + "</a>" +
+		  "</td></tr>";
+
   
 		$("#sub_damage_table tbody").append(tbody);
 	  });

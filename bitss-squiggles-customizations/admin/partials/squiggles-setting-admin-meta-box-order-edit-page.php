@@ -179,20 +179,33 @@ $booked_copy_post_id = $item->get_meta("return_copy_post_id");
             </div>    
         </div>
     </div>
+ 
 	<div class="sq_squiggles_damage_inputs">
-		<div class="sq_fields_and_labels">
-			<div class="field-label is-normal">
+        <div class="email_and_img">
+			<div class="">
+				<label class="label">Send a E-Mail notification:</label>
+			</div>
+			<div class="">
+				<div class="">
+                    <input type="checkbox" id="sq_email_notification" name="sq_email_notification">
+				</div>
+			</div>
+		</div>
+		<div class="email_and_img">
+			<div class="">
 				<label class="label">Upload Damage Book Images:</label>
 			</div>
-			<div class="field-body">
-				<div class="field">
+			<div class="">
+				<div class="">
 					<button type="button" class="" id="sq-upload-damage-images-button">Upload Images</button>
-					<div class="sq_squiggles_damage_inputs" id="sq-damage-book-img">
 					</div>
 				</div>
 			</div>
 		</div>
 	</div>
+    <div>
+        <div class="sq_squiggles_damage_inputs" id="sq-damage-book-img">
+    </div>
 </div>
 <div class="columns">
     <div class="column is-one-quarter">

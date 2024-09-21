@@ -32,7 +32,31 @@
  }
  .sq_squiggles_damage_inputs{
      display: flex;
+     margin: 8px 0px;
  }
+
+ .sq_squiggles_damage_inputs .email_and_img{
+    display: flex;
+    width: 50%;
+ }
+ .sq_squiggles_damage_inputs .email_and_img input{
+    height: 31px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #c5c4c9;
+    margin: 0px 11px;
+    width: 50px;
+ }
+ .sq_squiggles_damage_inputs .email_and_img button{
+    padding: 7px;
+    margin: 0px 8px;
+    cursor: pointer;
+    border: 1px solid #2271b1;
+    border-radius: 10px;
+    color: #2271b1;
+ }
+
 @media (max-width: 768px) {
    .sq_squiggles_damage_inputs{
       display: unset;

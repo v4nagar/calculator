@@ -345,6 +345,7 @@ class Bitss_Squiggles_Customizations_Admin {
 
 	public function send_save_subscription_damage()
 	{
+		
 		$resp = array(
 			"status" => false,
 			"message" => "",
@@ -354,8 +355,6 @@ class Bitss_Squiggles_Customizations_Admin {
 		if (isset($_POST['data'])) {
 
 			$sub_damage = $_POST['data'];
-			
-
 			$added_order_id = $sub_damage["added_order_id"];
 			$active_subscription_id = get_post_meta($added_order_id, 'active_subscription_id',true);
 			// $added_order_id = "172";
@@ -376,12 +375,31 @@ class Bitss_Squiggles_Customizations_Admin {
 			$sub_damages[] = $sub_damage;
 // 			echo "<pre>"; print_r($sub_damages); die;
 			update_post_meta( $active_subscription_id, 'sub_damages', $sub_damages);
-			
+			foreach ($sub_damages as $k => $item) {
+        
+				if (!empty($item['sq_books_ids'])) {
+					$image_urls = [];
+					foreach ($item['sq_books_ids'] as $image_id) {
+						   $image_url = wp_get_attachment_image_src($image_id, 'full'); 
+		// 				var_dump($image_url[0]);
+						if ($image_url) {
+							$image_urls[] = $image_url[0];
+						}
+					}
+					$sub_damages[$k]['sq_books_ids'] = $image_urls;
+				}
+			}
+
+			if($_POST['email']){
+				$notification_data = $_POST['data'];
+				$this->send_email_notification($notification_data);
+				$res_sms = " and Notification has sent";
+			}
 
 			$resp = array(
 				"status" => true,
 				"data" => $sub_damages,
-				"message" => "Saved successfully"
+				"message" => "Data Saved successfully".$res_sms
 			);
 
 		}
@@ -1519,7 +1537,9 @@ class Bitss_Squiggles_Customizations_Admin {
 					<tr>
 						<th>S.No.</th>
 						<th>Date</th>
-						<th>Type</th>
+						<th>Reason</th>
+						<th>Severity</th>
+						<th>Copy</th>
 						<th>Amount</th>
 						<th>Remark</th>
 						<th>Added Order Id</th>
@@ -1530,9 +1550,28 @@ class Bitss_Squiggles_Customizations_Admin {
 	
 		$i = 0;
 		$damage_amt = 0;
-	
+		foreach ($sub_damages as $k => $item) {
+        
+			if (!empty($item['sq_books_ids'])) {
+				$image_urls = [];
+				foreach ($item['sq_books_ids'] as $image_id) {
+					   $image_url = wp_get_attachment_image_src($image_id, 'full'); 
+					if ($image_url) {
+						$image_urls[] = $image_url[0];
+					}
+				}
+				$sub_damages[$k]['sq_books_ids'] = $image_urls;
+			}
+		}
+		// echo "<pre>"; print_r($sub_damages); die;
 		if (!empty($sub_damages)) {
 			foreach ($sub_damages as $value) {
+				$imagesHtml = "<div>";
+				foreach($value['sq_books_ids'] as $imageUrl){
+					$imagesHtml .= "<a href ='". $imageUrl ."' target='_blank'><img src='" . $imageUrl . "' alt='Damage Image' style='width:20px'></a>";
+				}
+				$imagesHtml .= "</div>";
+				// print_r($imagesHtml); die;
 				$i++;
 				$paid_order_id = isset($value['paid_order_id']) ? $value['paid_order_id'] : 'N/A';
 				if (!isset($value['paid_order_id'])) {
@@ -1542,7 +1581,9 @@ class Bitss_Squiggles_Customizations_Admin {
 					<tr>
 						<td>' . esc_html($i) . '</td>
 						<td>' . esc_html(date_i18n(get_option('date_format'), strtotime($value['date']))) . '</td>
-						<td>' . esc_html($value['type']) . '</td>
+						<td>' . esc_html($value['type']) . '<div class="sq-damage-table-img">'.$imagesHtml.'</div></td>
+						<td>' . esc_html($value['severity']) . '</td>
+						<td>' . esc_html($value['copys']) . '</td>
 						<td>' . wp_kses_post(wc_price($value['amt'])) . '</td>
 						<td>' . esc_html($value['remark']) . '</td>
 						<td>' . esc_html($value['added_order_id']) . '</td>
@@ -1748,67 +1789,135 @@ function handle_cancel_refund() {
 		$order = wc_get_order( $order_id );
 			$refunds = $order->get_refunds();
 
-// 			foreach ( $refunds as $refund ) {
-// 				// Get the current refund reason
-// 				$reason = $refund->get_reason();
+	// 			foreach ( $refunds as $refund ) {
+	// 				// Get the current refund reason
+	// 				$reason = $refund->get_reason();
 
-// 				// Check if the payment has been refunded
-// 				if ( ! $refund->get_refunded_payment() ) {
-// 					$pending_text = 'Refund Pending';
-// 					$pending_text = '(' . $pending_text . ')';
-// 				} else {
-// 					$refund_remark = $refund->get_meta( '_refund_remark' );
-// 					$refund_date = $refund->get_meta( '_refund_day_date' );
-					
-// 				}
+	// 				// Check if the payment has been refunded
+	// 				if ( ! $refund->get_refunded_payment() ) {
+	// 					$pending_text = 'Refund Pending';
+	// 					$pending_text = '(' . $pending_text . ')';
+	// 				} else {
+	// 					$refund_remark = $refund->get_meta( '_refund_remark' );
+	// 					$refund_date = $refund->get_meta( '_refund_day_date' );
+						
+	// 				}
 
-// 				// Append the pending text to the reason
-// 				$reason = $reason . ' ' . $pending_text;
+	// 				// Append the pending text to the reason
+	// 				$reason = $reason . ' ' . $pending_text;
 
-// 				// Set the updated reason
-// 				$refund->set_reason( $reason );
+	// 				// Set the updated reason
+	// 				$refund->set_reason( $reason );
 
-// 				// Save the updated refund object
-// 				$refund->save();
-// 			}
-foreach ( $refunds as $refund ) {
-    // Get the current refund reason
-    $reason = $refund->get_reason();
-    
-    // Check if the reason already contains the pending text
-    if ( strpos( $reason, 'Refund Pending' ) === false && ! $refund->get_refunded_payment() ) {
-        // If not refunded, append 'Refund Pending'
-        $pending_text = 'Refund Pending';
-        $pending_text = '(' . $pending_text . ')';
-    } elseif ( strpos( $reason, 'Refunded on' ) === false && $refund->get_refunded_payment() ) {
-        // If refunded, append 'Refunded on' and the formatted date
-        $refund_remark = $refund->get_meta( '_refund_remark' );
-        $refund_date = $refund->get_meta( '_refund_day_date' );
-        $formatted_date = date_i18n( get_option('date_format') . ' ' . get_option('time_format'), strtotime($refund_date) );
-        $pending_text = 'Refunded on ' . $formatted_date;
-        
-        // Append refund remark if needed
-        if ( $refund_remark ) {
-            $pending_text .= ' (' . $refund_remark . ')';
-        }
-    } else {
-        // Skip if pending text is already in the reason
-        continue;
-    }
+	// 				// Save the updated refund object
+	// 				$refund->save();
+	// 			}
+		foreach ( $refunds as $refund ) {
+			// Get the current refund reason
+			$reason = $refund->get_reason();
+			
+			// Check if the reason already contains the pending text
+			if ( strpos( $reason, 'Refund Pending' ) === false && ! $refund->get_refunded_payment() ) {
+				// If not refunded, append 'Refund Pending'
+				$pending_text = 'Refund Pending';
+				$pending_text = '(' . $pending_text . ')';
+			} elseif ( strpos( $reason, 'Refunded on' ) === false && $refund->get_refunded_payment() ) {
+				// If refunded, append 'Refunded on' and the formatted date
+				$refund_remark = $refund->get_meta( '_refund_remark' );
+				$refund_date = $refund->get_meta( '_refund_day_date' );
+				$formatted_date = date_i18n( get_option('date_format') . ' ' . get_option('time_format'), strtotime($refund_date) );
+				$pending_text = 'Refunded on ' . $formatted_date;
+				
+				// Append refund remark if needed
+				if ( $refund_remark ) {
+					$pending_text .= ' (' . $refund_remark . ')';
+				}
+			} else {
+				// Skip if pending text is already in the reason
+				continue;
+			}
 
-    // Append the pending text to the reason
-    $reason = $reason . ' ' . $pending_text;
+			// Append the pending text to the reason
+			$reason = $reason . ' ' . $pending_text;
 
-    // Set the updated reason
-    $refund->set_reason( $reason );
+			// Set the updated reason
+			$refund->set_reason( $reason );
 
-    // Save the updated refund object
-    $refund->save();
-}
+			// Save the updated refund object
+			$refund->save();
+		}
 
 
 
 	}
 
+	public function send_email_notification($notification_data) {
+		$subtotal = 0;
+		$order_id = $notification_data['added_order_id'];
+		$active_subscription_id = get_post_meta($order_id, 'active_subscription_id', true);
+		$sub_damages = get_post_meta($active_subscription_id, 'sub_damages', true);
+		$sub_damages[] = $notification_data;
+		// $credits = 4; 
+		$subscription = wcs_get_subscription($active_subscription_id);
+		$user_id = $subscription->get_user_id();
+		$user_info = get_userdata($user_id);
+		$user_email = $user_info->user_email;
+		
+		$image_urls = [];
+		foreach ($sub_damages as $k => $item) {
+			if (!empty($item['sq_books_ids'])) {
+				foreach ($item['sq_books_ids'] as $image_id) {
+					$image_url = wp_get_attachment_image_src($image_id, 'full'); 
+					if ($image_url) {
+						$image_urls[] = $image_url[0];
+					}
+				}
+				$sub_damages[$k]['sq_books_ids'] = $image_urls;
+			}
+		}
+	
+		$subject = "Important information related to your recent Order #" . esc_html($order_id);
+		ob_start();
+		include plugin_dir_path(dirname(__FILE__)) . 'admin/partials/bitss-squiggles-email-notification-display.php';
+		$message = ob_get_contents();
+		ob_end_clean();
+		
+		$headers = array('Content-Type: text/html; charset=UTF-8');
+		$attachments = [];
+		if (!empty($image_urls)) {
+			foreach ($image_urls as $url) {
+				$temp_file = $this->download_image($url);
+				if ($temp_file) {
+					$attachments[] = $temp_file;
+				}
+			}
+		}
+
+		if (!empty($user_email) && !empty($subject) && !empty($message)) {
+			wp_mail($user_email, $subject, $message, $headers, $attachments);
+		}
+	
+		if (!empty($attachments)) {
+			foreach ($attachments as $file) {
+				if (file_exists($file)) {
+					unlink($file);
+				}
+			}
+		}
+	}
+	
+	function download_image($url) {
+		$upload_dir = wp_upload_dir();
+		$temp_file = $upload_dir['path'] . '/' . basename($url);
+		$image_content = file_get_contents($url);
+		if ($image_content) {
+			file_put_contents($temp_file, $image_content);
+			return $temp_file;
+		}
+	
+		return false;
+	}
+	
+	
 	
 }	
